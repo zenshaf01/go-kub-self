@@ -10,6 +10,9 @@ import (
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
+// This is used for determining what code was used to build a docker image / container. This helps us with debugging
+var build = "develop"
+
 // application entry point
 func main() {
 	// Create a logger
@@ -41,7 +44,7 @@ func main() {
 
 func run(ctx context.Context, log *logger.Logger) error {
 	// It's always good to log the th num CPU's you have
-	log.Info(ctx, "starting service", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Info(ctx, "starting service", "GOMAXPROCS", runtime.GOMAXPROCS(0), "build", build)
 
 	// We need to block this program from exiting
 

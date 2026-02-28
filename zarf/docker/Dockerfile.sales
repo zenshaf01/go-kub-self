@@ -1,0 +1,36 @@
+# Build the Go Binary.
+
+# Set the container base image
+FROM golang:1.26 as build_sales
+# CGO is being disabled below. This stops from linking any go code to c libraries
+ENV CGO_ENABLED 0
+# The below is to pass program arguments for the build phase.
+ARG BUILD_REF
+
+# Copy the code into the container
+# . means everything in current working directory
+# But since we might not need everything copied (We dont need readmes in there do we ?) we should have dockerignore file at root
+# to ignore files
+COPY . /service
+
+# Build the application service binary
+# Set the working dir
+WORKDIR /service/apis/services/sales
+# Below is not running the app it is just running the command after the word RUN
+# BUILD_REF should be something to identify the version of the code that is being built and deployed using the docker file.
+# The ref could be a branch name, commit hash or a git tag
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
+# Run the go binary in Alpine
+FROM alpine:3.19
+ARG BUILD_DATE
+ARG BUILD_REF
+# We should set some read and write access for tyhe binary just so that it doesnt just has access to everything on the machine
+# we shoudl restreict binary rights
+RUN addgroup -g 1000 -S sales && adduser -u 1000 -h /service -G sales -S sales
+# copy binary from previous stage to this new one
+COPY --from=build_sales --chown=sales:sales /service/apis/services/sales/sales /service/sales
+WORKDIR /service
+USER sales
+CMD ["./sales"]
+

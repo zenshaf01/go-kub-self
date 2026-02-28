@@ -1,0 +1,8 @@
+class.excalidraw
+.dockerignore
+.gitignore
+zarf/docker
+zarf/k8s
+Makefile
+notes.md
+README.md

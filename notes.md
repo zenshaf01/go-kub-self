@@ -93,7 +93,7 @@ You can put them in Pods in dev but not staging or prod.
 - `kind` creates a local kubernetes cluster using docker.
 - Steps:
   - Create the cluster
-  - Create docker images for services
+  - Create docker images for services (create binaries / images for our application services) (build dockerfiles)
   - Create & Apply the deployments for the Pod
   - 
 
