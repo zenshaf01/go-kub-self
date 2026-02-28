@@ -11,10 +11,11 @@ ARG BUILD_REF
 # . means everything in current working directory
 # But since we might not need everything copied (We dont need readmes in there do we ?) we should have dockerignore file at root
 # to ignore files
+# Second argument is target folder of code
 COPY . /service
 
 # Build the application service binary
-# Set the working dir
+# Set the working dir at the fodler we just copied above
 WORKDIR /service/apis/services/sales
 # Below is not running the app it is just running the command after the word RUN
 # BUILD_REF should be something to identify the version of the code that is being built and deployed using the docker file.
