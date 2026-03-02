@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"expvar"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/ardanlabs/service/apis/services/api/debug"
 	"github.com/ardanlabs/service/foundation/logger"
 )
 
@@ -82,13 +85,29 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("parsing config: %w", err)
 	}
 	log.Info(ctx, "service starting with version: ", cfg.Build)
+	// ---------------------------------------------------------------------------------------------
+	// Start debug service
+	// As a general rule, the parent goroutine should not terminate before child goroutines.
+	// You should not have orphan goroutines.
+	// The main goroutine is the parent and the one below is child.
+	go func() {
+		log.Info(ctx, "starting api service", "debug v1 router started")
 
+		// The listenAndServe call is blocking
+		// The mux has the url to handler mapping
+		if err = http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
+			log.Error(ctx, "shutdown", "status", "http debug server closed", "error", err)
+		}
+	}()
+
+	// ---------------------------------------------------------------------------------------------
 	// Build a string from config to be written to stdout
 	out, err := conf.String(&cfg)
 	if err != nil {
 		return fmt.Errorf("generating config: %w", err)
 	}
 	log.Info(ctx, "startup config: ", out)
+	expvar.NewString("build").Set(cfg.Build)
 
 	// create a channel for os.Signal. This channel will only take OS signals
 	shutdown := make(chan os.Signal, 1) // buffered

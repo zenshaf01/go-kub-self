@@ -31,6 +31,11 @@ spec:
         - name: sales # name of the container
           image: sales-image # image name. This should match the image name in docker. But for now we will put sales-image and then
           # later have kustomize inject a variable value in here
+          ports:
+            - name: sales
+              containerPort: 3000
+            - name: sales-debug
+              containerPort: 3010
           env:
             - name: GOMAXPROCS
               valueFrom:

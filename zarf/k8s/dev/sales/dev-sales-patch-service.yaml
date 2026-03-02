@@ -6,14 +6,14 @@ metadata:
 
 spec:
   type: ClusterIP
-#
-#  ports:
-#  - name: sales
-#    port: 3000
-#    targetPort: sales
-#  - name: sales-debug
-#    port: 3010
-#    targetPort: sales-debug
+  # This is for networking in and outside and across pod
+  ports:
+  - name: sales
+    port: 3000
+    targetPort: sales
+  - name: sales-debug
+    port: 3010
+    targetPort: sales-debug
 #  - name: metrics
 #    port: 4000
 #    targetPort: metrics

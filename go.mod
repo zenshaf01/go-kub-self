@@ -4,5 +4,8 @@ go 1.26
 
 require (
 	github.com/ardanlabs/conf/v3 v3.11.0
+	github.com/arl/statsviz v0.8.0
 	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433
 )
+
+require github.com/gorilla/websocket v1.5.3 // indirect
