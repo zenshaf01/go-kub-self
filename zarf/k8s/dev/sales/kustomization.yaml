@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/sales/ # loads all yaml files in base
+patches:
+  - path: ./dev-sales-patch-deploy.yaml # Patch existing base with this environments updates
+  - path: ./dev-sales-patch-service.yaml # Apply some more patches to base
+images:
+  - name: sales-image # look for image called sales-images in base
+    newName: localhost/ardanlabs/sales # replace the above with the new name (This is the actual image name in docker)
+    newTag: 0.0.1

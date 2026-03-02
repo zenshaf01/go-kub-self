@@ -20,6 +20,14 @@ root:
     - foundation
         - logger
             - logger.go
+    - zarf
+        - docker
+            - Dockerfile
+        - k8s
+            - base (this directory acts as a container for configs that will present in all envs (dev, staging, prod)
+                - sales (pod)
+            - dev
+                - sales (pod)
 
 # main function:
 - The entry point essentially calls the run function which starts the application.
@@ -50,6 +58,7 @@ vendor folder.
 
 # Kubernetes:
 Kubernetes is an orchestration tool for containerized applications.
+Kubernetes is an asynchronous event driven system.
 - Architecture:
     - Control Plane: Sits at the top of clusters and manages it to ensure desired state automatically.
     The control plane runs on multiple nodes across datacenters.
@@ -94,7 +103,73 @@ You can put them in Pods in dev but not staging or prod.
 - Steps:
   - Create the cluster
   - Create docker images for services (create binaries / images for our application services) (build dockerfiles)
-  - Create & Apply the deployments for the Pod
-  - 
+  - Create / Define & Apply the deployments for the Pod
+    - You need some tooling for this
+    - We will use kustomize to manage deployments
+
+# Kubernetes Quotas:
+Kubernetes allows you to tell how much cpu and memory a service (container) gets.
+This is done through quotas.
+- We want to tell kubernetes that we want to give a service some percentage of the cpu. Like saying S1 takes 25% of CPU, S2 takes 25% and S3 takes 50%.
+- But how do you achieve that ?
+- What kubernetes or other OS's do is that:
+  - For each cpu core, they define 100ms of indefinite time cycles, Now when you say I want a service to take 100% of cpu time. The service will end up having the full 100ms per cycle.
+  - If we say we want S1 to take 25% and S2 to take 75%. S1 will take 25ms and S2 will get 75ms of time on each of those 100ms time cycles / slices.
+  - We can also specify a value over 100%. If we say S3 take up 150% of cpu, that means (if the machine has 2 cores) the service will get a full 100ms on core1 and 50ms on core 2 each cycle.
+  - The amount of time the service gets is not tied to a core. So if a service is allotted 100%, it could get 50ms on one core and 50 ms on the second core. but the guarantee is that 
+  it will get a full 100ms.
+- With Go we are always matching the number of OS threads with the number of Cores. Co imagine if we had more threads than cores, say we had 2 threads on a single core and we say,
+S1 gets only 25ms out of 100ms, that means that since we have 2 threads on 1 core. that 25ms will get halved between the 2 threads, leaving us with less than 12ms per thread, why less
+than 12ms ? coz the threads will have to be context switched which will waste time and cpu cycles.
+
+
+# Background knowledge:
+The go scheduler:
+- When the go runtime starts, it asks the machine how many cores it has.
+- The go run time will create N OS threads for N cores, in order to run goroutines.
+- For every OS thread, the runtime will create a P (represents a logical processor), The P will be attached to the M (represents OS thread), creates 1 G (the main go routine)
+- the main G can create other G's. Once created, they sit in LRQ (Local run Queue) until they get a chance to get executed by the scheduler.
+- Each P has its own LRQ.
+- At P level only a fixed number of G's can end up on the LRQ. Once all LRQ's of all P's are full, The G's start ending up on the GRQ (Global Run Queue). 
+- As we get space in LRQ, G's are transferred from the GRQ to LRQ before they can be put on P tro be executed.
+- G is application level thread.
+- G has a stack, has those thread states. Runs in user level.
+- All application code runs in a G. The G gets attached to the M. The M is attached to the CPU Core which is executing instructions.
+- Context switch takes place when an 1 M is taken of the physical core and another M is put onto it so that the work on M2 can be performed. Or at go level,
+context switch involves having G1 taken off from M and G2 being put on it (the context switch is 200nano / 2400 instructions).
+- Context switches are expensive as they waste cpu cycles as no work is being performed during the switch. (1000 ns or 1 microsecond or 12000 instructions)
+- 3Ghz means 3 clock cycles / nanosecond, the clock cycle is the main thing that needs to happen for work to be done. it is the heart beat.
+- we can execute 4 instruction per clock cycle.
+- so if we have a 3Ghz processor, this means we can execute 3 * 4 = 12 instructions per nanosecond.
+- It comes important for us to not waste these cycles and instructions in context switching.
+- ms latency is very bad.
+- We want our context switch to ideally happen at G level.
+- The go scheduler is special in that the context switch happens on the G-M level not on the M-Core level. This means M is always doing work on Core and we waste less instructions 
+by only switching at the G-M level. This also results in IO bound work to be converted to CPU bound workload.
+- A context switch happens because of 2 reasons:
+  - You are doing IO bound work, and the thread need to wait for something else to provide you with data (sys call).
+  - The thread has used up its time slice (10 millisecond) and now has to wait for it turn again.
+- There are 2 types of workloads:
+  - CPU bound
+    - A workload which does not require the thread to every wait.
+    - We want no context switches for CPU bound tasks as that will waste time during context switch.
+    - Try to do a cpu bound work with a single threaded algorithm as that will be faster coz of the absence of context switch.
+    - If you want to use a multithreaded algorithm for CPU bound tasks, make sure you never use more threads than the physical cores you have. This will result in no context switches.
+  - I/O bound
+    - A workload which require a thread to wait for something (OS,disk, net).
+    - We want a multithreaded algorithm for I/O bound workload. This allows tus to save any wasted cpu cycles which might be wasted because the thread has to wait for a sys call.
+    Instead of waiting we take off the waiting thread and put another one on the M so that it can do its work. 
+    - context switch's in the case of I/O bound work is less expensive than allowing a single thread to just wait for the sys call to complete and hog the cpu (wasting cpu cycles).
+    - But don't throw a million threads on an I/O bound work. That will be detrimental.
+    - use a thread pool (G pool in our case) and try to determine an optimal number of G's that can result in the I/O bound work to be done the fastest.
+- Concurrency: Out of order execution
+- Parallelism: Physically execute instructions at the same time.
+
+# Key takeaways for above:
+- Our go programs are always CPU bound. I/O bound is also converted into CPU bound workload since G's are on M's and there is no context switch between M and Core (which is mroe expensive).
+- never use more OS threads than Cores.
+- If we are using CPU limits, and we are limiting the service to 25ms or less than the full 100ms:
+  - Our Go program should be single threaded (since it is only taking one cpu)
+
 
 

@@ -72,3 +72,37 @@ sales:
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
 
+# Load images into local repo using kind
+dev-load:
+	# this stages the image in a local docker repo and tells kubernetes to fetch image from here instead of downloading from the net.
+	kind load docker-image $(SALES_IMAGE) --name $(KIND_CLUSTER)
+
+# Apply config to k8s using kubectl
+# run this when there are config changes for k8s
+dev-apply:
+	# Kustomize builds a single yaml file which we can feed to kubernetes to deploy our pods and then we pipe into kubectl to apply
+	kustomize build zarf/k8s/dev/sales | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(SALES_APP) --timeout=120s --for=condition=Ready
+
+# This restarts the deployment
+dev-restart:
+	kubectl rollout restart deployment $(SALES_APP) --namespace=$(NAMESPACE)
+
+# rebuild the image binary, load the docker image and restart the pods. (For code updates)
+dev-update: build dev-load dev-restart
+
+# build the binary, load the image and then apply it to the cluster (For yaml updates)
+dev-update-apply: build dev-load dev-apply
+
+# get logs for deployment
+dev-logs:
+	kubectl logs --namespace=$(NAMESPACE) -l app=$(SALES_APP) --all-containers=true -f --tail=100 --max-log-requests=6
+
+# describe the deployment in a namespace
+dev-describe-deployment:
+	kubectl describe deployment --namespace=$(NAMESPACE) $(SALES_APP)
+
+# describe the pod that has your app running in.
+# If something isnt working correctly, we should run this to see whats actually going on.
+dev-describe-sales:
+	kubectl describe pod --namespace=$(NAMESPACE) -l app=$(SALES_APP)

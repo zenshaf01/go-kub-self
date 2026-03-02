@@ -1,0 +1,52 @@
+# Define a name space for the pod
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sales-system
+
+---
+
+# Define what the pod will look like
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sales # name of pod
+  namespace: sales-system # namespace of pod
+
+# Pod specification
+spec:
+  # The selector tells k8s what to work / characters to match for while searching for the pod. since pod names will always be random
+  # in k8s pod name will be like sales-1234.
+  selector:
+    matchLabels:
+      app: sales
+  # associate the template with sales pod
+  template:
+    metadata:
+      labels:
+        app: sales
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: sales # name of the container
+          image: sales-image # image name. This should match the image name in docker. But for now we will put sales-image and then
+          # later have kustomize inject a variable value in here
+          env:
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  # This is picked up from the limit value in the patch file for our environment
+                  # that says 250ms in the file, so k8s will convert it to 0.25 and do a math.ceil on it (so 0.25 means GOMAXPROCS will be 1)
+                  resource: limits.cpu
+
+---
+
+# Define networking for the pod
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-service
+  namespace: sales-system
+spec:
+  selector:
+    app: sales
