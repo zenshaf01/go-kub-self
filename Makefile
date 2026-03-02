@@ -6,6 +6,13 @@ run:
 	# The below pipes the first program's output towards stdOut to second programs StdIn
 	go run apis/services/sales/main.go | go run apis/tooling/logfmt/main.go
 
+help:
+	go run apis/services/sales/main.go --help
+
+version:
+	go run apis/services/sales/main.go --version
+
+
 tidy:
 	go mod tidy
 	# This is putting all third part code packages in the vendor folder.

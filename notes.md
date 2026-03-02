@@ -127,7 +127,7 @@ than 12ms ? coz the threads will have to be context switched which will waste ti
 The go scheduler:
 - When the go runtime starts, it asks the machine how many cores it has.
 - The go run time will create N OS threads for N cores, in order to run goroutines.
-- For every OS thread, the runtime will create a P (represents a logical processor), The P will be attached to the M (represents OS thread), creates 1 G (the main go routine)
+- For every OS thread, the runtime will create a P (represents a logical processor (is actually the context and is the scheduler)), The P will be attached to the M (represents OS thread), creates 1 G (the main go routine)
 - the main G can create other G's. Once created, they sit in LRQ (Local run Queue) until they get a chance to get executed by the scheduler.
 - Each P has its own LRQ.
 - At P level only a fixed number of G's can end up on the LRQ. Once all LRQ's of all P's are full, The G's start ending up on the GRQ (Global Run Queue). 
