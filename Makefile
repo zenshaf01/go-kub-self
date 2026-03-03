@@ -120,3 +120,6 @@ metrics:
 # Gives you the graphs for performance metrics
 statsviz:
 	open -a "Google Chrome" http://localhost:3010/debug/statsviz
+
+curl-test:
+	curl -il -X GET http://localhost:3000/test

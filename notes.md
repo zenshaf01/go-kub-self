@@ -171,5 +171,32 @@ by only switching at the G-M level. This also results in IO bound work to be con
 - If we are using CPU limits, and we are limiting the service to 25ms or less than the full 100ms:
   - Our Go program should be single threaded (since it is only taking one cpu)
 
+# HTTP 
+- Use the `http.Server` to create a new server
+- Use the ServeMux to create a handlers and endpoints
+- Never use the DefaultServeMux as it has a huge security vulnerability. Any package or library can insert a handler to it.
+- We should liveness and readiness handlers
+- Kubernetes needs these handlers to check if the service is alive in the pod
+
+# Packaging
+Main Ideas for engineering the project
+- package design
+  - This creates a firewall around API's (). 
+  - We build packages that provide value.
+  - There should be no common package for types
+  - Each package should have their own types for data which comes and leaves the package
+    - You can have 2 types of types:
+      - concretes
+        - Structs
+        - Api accepts the data based on what the data is
+      - interfaces
+        - interface types
+        - Api accepts the data based on how the data behaves (Polymorphic) (runtime polymorphism)
+        - runtime polymorphism: when we accept defined interfaces as paramaters
+        - compile time polymorphism: Usage of generic type T in go
+- horizontal layering
+- data relationship
+- Accept interfaces, return concrete types.
+
 
 
