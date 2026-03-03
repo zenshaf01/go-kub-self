@@ -174,11 +174,16 @@ by only switching at the G-M level. This also results in IO bound work to be con
 # HTTP 
 - Use the `http.Server` to create a new server
 - Use the ServeMux to create a handlers and endpoints
+- The servemux's job is to:
+  - take an http request, see if there is a matching url 
+  - See if it has a matching handler for the incoming url path 
+  - Create a new goroutine and run that handler in that goroutine
 - Never use the DefaultServeMux as it has a huge security vulnerability. Any package or library can insert a handler to it.
 - We should liveness and readiness handlers
 - Kubernetes needs these handlers to check if the service is alive in the pod
 - You should break up your route handler functions into separate packages. The handler functions and the 
 routes should live in the same package.
+- For all our API's the first parameter should always be the context. We need it for IO or DB or other sys calls
 
 # Packaging
 Main Ideas for engineering the project

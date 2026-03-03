@@ -1,16 +1,21 @@
 package mux
 
 import (
-	"net/http"
+	"os"
 
 	"github.com/ardanlabs/service/apis/services/sales/mux/route/sys/checkapi"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-func WebAPI() *http.ServeMux {
+func WebAPI(shutdown chan os.Signal) *web.App {
 	// Create the mux
 	// The serve mux is a router implementation.
 	// YOu can attach the handlers to the mux for each of the endpoints
-	mux := http.NewServeMux()
+	// The servemux's job is to:
+	// - take an http request, see if there is a matching url
+	// - See if it has a matching handler for the incoming url path
+	// - Create a new goroutine and run that handler in that goroutine
+	mux := web.NewApp(shutdown)
 	// Attach handler to mux with endpoint pattern
 	checkapi.Routes(mux)
 	return mux

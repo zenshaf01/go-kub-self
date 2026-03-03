@@ -1,10 +1,10 @@
 package checkapi
 
 import (
-	"net/http"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
-func Routes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /liveness", liveness)
-	mux.HandleFunc("GET /readiness", readiness)
+func Routes(mux *web.App) {
+	mux.Handle("GET /liveness", liveness)
+	mux.Handle("GET /readiness", readiness)
 }
