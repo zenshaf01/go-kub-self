@@ -1,8 +1,9 @@
 package mux
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/ardanlabs/service/apis/services/sales/mux/route/sys/checkapi"
 )
 
 func WebAPI() *http.ServeMux {
@@ -10,20 +11,7 @@ func WebAPI() *http.ServeMux {
 	// The serve mux is a router implementation.
 	// YOu can attach the handlers to the mux for each of the endpoints
 	mux := http.NewServeMux()
-
-	// Create the handler
-	h := func(w http.ResponseWriter, r *http.Request) {
-		s := struct {
-			Status string
-		}{
-			Status: "OK",
-		}
-
-		json.NewEncoder(w).Encode(s)
-	}
-
 	// Attach handler to mux with endpoint pattern
-	mux.HandleFunc("GET /test", h)
-
+	checkapi.Routes(mux)
 	return mux
 }

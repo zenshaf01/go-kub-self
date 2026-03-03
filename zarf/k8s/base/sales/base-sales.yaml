@@ -36,6 +36,25 @@ spec:
               containerPort: 3000
             - name: sales-debug
               containerPort: 3010
+          readinessProbe: # readiness probes mark the service available to accept traffic.
+            httpGet:
+              path: /readiness
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
+
+          livenessProbe: # liveness probes mark the service alive or dead (to be restarted).
+            httpGet:
+              path: /liveness
+              port: 3000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 2
           env:
             - name: GOMAXPROCS
               valueFrom:
@@ -43,6 +62,7 @@ spec:
                   # This is picked up from the limit value in the patch file for our environment
                   # that says 250ms in the file, so k8s will convert it to 0.25 and do a math.ceil on it (so 0.25 means GOMAXPROCS will be 1)
                   resource: limits.cpu
+
 
 ---
 

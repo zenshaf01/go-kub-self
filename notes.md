@@ -177,6 +177,8 @@ by only switching at the G-M level. This also results in IO bound work to be con
 - Never use the DefaultServeMux as it has a huge security vulnerability. Any package or library can insert a handler to it.
 - We should liveness and readiness handlers
 - Kubernetes needs these handlers to check if the service is alive in the pod
+- You should break up your route handler functions into separate packages. The handler functions and the 
+routes should live in the same package.
 
 # Packaging
 Main Ideas for engineering the project
