@@ -204,6 +204,7 @@ Main Ideas for engineering the project
 - horizontal layering
 - data relationship
 - Accept interfaces, return concrete types.
+- The app layer should not have any information regarding the protocol layer (Api). There shouldn't be any code accessing protocol layer code in the app code.
 
 
 

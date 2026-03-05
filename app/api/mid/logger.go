@@ -2,7 +2,7 @@ package mid
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 
 	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/ardanlabs/service/foundation/web"
@@ -11,18 +11,19 @@ import (
 // Logger We need a function which is a middleware function.
 // A middleware function is a function which take a web handler as a parameter and return a web handler.
 // The below uses a closure to pass in the logger to teh middleware function
-func Logger(logger *logger.Logger) web.MidHandler {
-	m := func(handler web.Handler) web.Handler {
-		// See how it has wrapped the passed in handler with the new handler which does its own thing before and after calling the passed in handler.
-		h := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-			// Do something here
-			logger.Info(ctx, "request started", r.Method, "path", r.URL.Path, "remoteAddress", r.RemoteAddr)
-			err := handler(ctx, w, r)
-			// Do something here
-			logger.Info(ctx, "request completed", r.Method, "path", r.URL.Path, "remoteAddress", r.RemoteAddr)
-			return err
-		}
-		return h
+// Logger writes information about the request to the logs.
+func Logger(ctx context.Context, log *logger.Logger, path string, rawQuery string, method string, remoteAddr string, handler Handler) error {
+	v := web.GetValues(ctx)
+
+	if rawQuery != "" {
+		path = fmt.Sprintf("%s?%s", path, rawQuery)
 	}
-	return m
+
+	log.Info(ctx, "request started", "method", method, "path", path, "remoteaddr", remoteAddr)
+
+	err := handler(ctx)
+
+	log.Info(ctx, "request completed", "method", method, "path", path, "remoteaddr", remoteAddr, "statucode", v.StatusCode)
+
+	return err
 }

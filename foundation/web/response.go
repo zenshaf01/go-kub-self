@@ -6,15 +6,16 @@ import (
 	"net/http"
 
 	"github.com/go-json-experiment/json"
+	"go.opentelemetry.io/otel/attribute"
 	//"go.opentelemetry.io/otel/attribute"
 )
 
 // Respond converts a Go value to JSON and sends it to the client.
 func Respond(ctx context.Context, w http.ResponseWriter, data any, statusCode int) error {
-	//ctx, span := AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))
-	//defer span.End()
+	ctx, span := AddSpan(ctx, "foundation.web.response", attribute.Int("status", statusCode))
+	defer span.End()
 
-	//setStatusCode(ctx, statusCode)
+	setStatusCode(ctx, statusCode)
 
 	if statusCode == http.StatusNoContent {
 		w.WriteHeader(statusCode)
